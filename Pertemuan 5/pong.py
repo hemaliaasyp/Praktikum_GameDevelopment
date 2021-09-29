@@ -85,7 +85,10 @@ class Ball(Block):
             self.speed_y*= -1
 
         if pygame.sprite.spritecollide(self, self.paddles, False):
+            # Digunakan untuk memutar sound
             pygame.mixer.Sound.play(plob_sound)
+            
+            # Digunakan untuk mengatur pergerakan balok dengan menyesuaikan pergerakan random dari bola
             collision_paddle = pygame.sprite.spritecollide(self, self.paddles, False)[0].rect
             if abs(self.rect.right - collision_paddle.left) < 10 and self.speed_x > 0:
                 self.speed_x *= -1
