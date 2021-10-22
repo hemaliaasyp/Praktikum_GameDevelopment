@@ -1,8 +1,9 @@
-# Metadata
+# Judul dari permainan
 TITLE = "Sky High"
 
-#mengimport library
+# untuk mengakses kerangka kerja PyGame,os, sys, pickle.
 import pygame, os, sys, pickle
+#mengimpor semua modul pygame yang tersedia ke dalam paket pygame
 from pygame.locals import *
 from random import randrange, choice, choices
 from itertools import repeat
@@ -10,11 +11,12 @@ from data.scripts.sprites import Player, Obstacle, Hat, Pet, TulangMeter, Text, 
 from data.scripts.scene import Scene, SceneManager
 from data.scripts.config import *
 
-#inisialisasi program
+#menginisialisasi semua modul yang diperlukan untuk PyGame
 pygame.init()
 pygame.mixer.init()
 
 # Directories
+# os.path.join()menggabungkan berbagai komponen jalur dengan tepat satu pemisah direktori
 GAME_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(GAME_DIR, "data")
 FONT_DIR = os.path.join(DATA_DIR, "fonts")
@@ -22,50 +24,67 @@ IMG_DIR = os.path.join(DATA_DIR, "img")
 SFX_DIR = os.path.join(DATA_DIR, "sfx")
 GAME_FONT = os.path.join(FONT_DIR, "prstartk.ttf")
 
-# GameData
+#menambahkan kelas GameData
 class GameData:
+    #mendekalarasikan variabel self
     def __init__(self):
-        #
+        #memuat hewan peliharaan yang dilengkapi
         self.equipped_pet = "none"
+        #memuat hewan peliharaan yang dimiliki
         self.owned_pets = []
+        #memuat hewan peliharaan yang dilengkapi topi
         self.equipped_hat = "none"
-        #diinputkan lewat array
+        #memuat hewan peliharaan yang dimiliki topi
         self.owned_hats = []
 
-        # Stats for nerds
+        # Mulai untuk nerd
+        #memuat koin 
         self.coins = 0
+        #memuat skortertinggi
         self.highscore = 0
+        #memuat waktu saat mati
         self.times_died = 0
+        #memuat waktu saat memukul
         self.times_hit = 0
+        #memuat waktu pengambilan bahan bakar
         self.times_fuelpickup = 0
+        #memuat waktu shieldpickup
         self.times_shieldpickup = 0
+
         self.play_time = 0
 
-# Load game data
+# mendekalarasikan Muat data permainan
 infile = open(os.path.join(DATA_DIR, "user_data.dat"), "rb")
-#pickle untuk memproses data
 game_data = pickle.load(infile)
 infile.close()
 
-# Functions sfx dir untuk mengambil direktori
+# Functions
+#mendekalarasikan fungsi load sound
 def load_sound(filename, sfx_dir, volume):
     path = os.path.join(sfx_dir, filename)
     snd = pygame.mixer.Sound(path)
     snd.set_volume(volume)
     return snd
-
-#untuk meload gambar
+#mendekalarasikan variabel self
 def load_png(file, directory, scale, convert_alpha=False):
     try:
+        # os.path.join()menggabungkan berbagai komponen jalur dengan tepat satu pemisah direktori
         path = os.path.join(directory, file)
         if not convert_alpha:
+            #memuat gambar baru dari file
             img = pygame.image.load(path).convert_alpha()
         else:
+            #memuat gambar baru dari file
             img = pygame.image.load(path).convert()
+            #memuat warna pada gambar yang di dapat
             transColor = img.get_at((0,0))
+            #mengatur kunci pada gambar
             img.set_colorkey(transColor)
+        #memuat lebar pada gambar
         img_w = img.get_width()
+         #memuat lebar pada gambar
         img_h = img.get_height()
+        #memuat lebar pada gambar
         img = pygame.transform.scale(img, (img_w*scale, img_h*scale))
         return img
     except Exception as e:
@@ -78,33 +97,39 @@ enter_sfx = load_sound("enter.wav", SFX_DIR, 0.6)
 buy_sfx = load_sound("buy.wav", SFX_DIR, 0.6)
 denied_sfx = load_sound("denied.wav", SFX_DIR, 0.8)
 explosion_sfx = load_sound("explosion.wav", SFX_DIR, 0.5)
-
+#menambahkan kelas TitleScene
 class TitleScene(Scene):
+    #mendekalarasikan variabel self
     def __init__(self):
-        # Booleans
+        # Memuat Booleans
         self.help_available = False
         self.stats_available = False
 
-        # Surfaces
+        # Memuat Permukaan
         self.menu_area = pygame.Surface((256, 280))
         self.menu_area_rect = self.menu_area.get_rect()
         self.menu_area_rect.centerx = WIN_SZ[0] / 2
         self.menu_area_rect.y = 200
+        #memuat logo baru dari file
         self.logo_img = load_png("lo10.png", IMG_DIR, 1)
         self.help_area = pygame.Surface((300, 450))
+        #memuat gambar baru dari file
         self.help_img = load_png("help.png", IMG_DIR, 4)
         self.stats_area = pygame.Surface((300, 450))
         self.stats_area = pygame.transform.scale(self.stats_area, (10,10))
+        #memuat gambar pemain dari file
         self.dev_img = load_png("kitty3.png", IMG_DIR,1 )
 
         self.bg_layer1_x = 0
-
+        self.bg_layer2_x = 0
+        self.bg_layer3_x = 0
+        #memuat backround pada layer 1 dari file
         self.bg_layer1_img = load_png("bgnaw.png", IMG_DIR, 1)     
         self.bg_layer1_rect = self.bg_layer1_img.get_rect()
         self.bg_layer1_img = pygame.transform.scale(self.bg_layer1_img, (1200,512))
         
 
-        # Selector untuk kotak pada shop
+        # Pemilih
         self.y_offset = 32
         self.selector_width = 6
         self.selector_y = -self.selector_width + self.y_offset
@@ -115,7 +140,7 @@ class TitleScene(Scene):
         self.helptexts = pygame.sprite.Group()
         self.optiontexts = pygame.sprite.Group()
 
-        # Texts for menu
+        # Memuat Teks untuk menu
         #self.text_title = Text(self.menu_area.get_width() / 2, self.menu_area.get_height () / 8, "CAFFEINE", GAME_FONT, 48, 'white')
         self.text_play = Text(self.menu_area.get_width() / 2, 0 + self.y_offset, "PLAY", GAME_FONT, 34, 'white')
         self.text_shop = Text(self.menu_area.get_width() / 2, 45 + self.y_offset, "SHOP", GAME_FONT, 32, 'yellow')
@@ -134,7 +159,7 @@ class TitleScene(Scene):
         self.text_help.rect = (16,16)
         self.helptexts.add(self.text_help)
 
-        # Texts for stats area pada menu
+        # Texts for stats area
         self.text_statslabel = Text(0, 0, "STATS", GAME_FONT, 32, 'white')
         self.text_statslabel.rect = (16,16)
         self.text_highscore = Text(0,0, f"Hi-score: {game_data.highscore}", GAME_FONT, 14, 'yellow')
@@ -159,20 +184,22 @@ class TitleScene(Scene):
         self.statstexts.add(self.text_timesfuel)
         self.statstexts.add(self.text_timesshield)
         self.statstexts.add(self.text_playtime)
-
+        
+    #mendekalarasikan variabel (self,events)
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                #jika Key w atau K up dan cur_sel lebih dari 0 maka
+                #jika acara kunci saat  mengklik tombol tutup di sudut jendela
                 if (event.key == pygame.K_w or event.key == pygame.K_UP) and self.cur_sel > 0:
                     self.selector_y -= 45
                     self.cur_sel -= 1
                     select_sfx.play()
+                #jika acara kunci saat  mengklik tombol tutup di sudut jendela
                 if (event.key == pygame.K_s or event.key == pygame.K_DOWN) and self.cur_sel < len(self.optiontexts) - 1:
                     self.selector_y += 45
                     self.cur_sel += 1
                     select_sfx.play()
-                
+                 #jika acara kunci saat  mengklik tombol tutup di sudut jendela
                 if event.key == pygame.K_RETURN:
                     if self.cur_sel == 0:
                         self.manager.go_to(GameScene())
@@ -185,23 +212,23 @@ class TitleScene(Scene):
                         self.stats_available = False
                         self.help_available = not self.help_available
                     elif self.cur_sel == 4:
-                        # Save data and exit
+                        # Memuat menyimpan data dan keluar
                         #game_data.coins = 3000
                         outfile = open(os.path.join(DATA_DIR, "user_data.dat"), "wb")
                         pickle.dump(game_data, outfile)
                         outfile.close()
                         sys.exit()
                     enter_sfx.play()
-
+    #mendekalarasikan untuk mengupdate
     def update(self):
 
-        # Update background and parallax x position
+        # Perbarui latar belakang dan posisi paralaks x
         self.bg_layer1_x -= 1
 
         self.statstexts.update()
         self.helptexts.update()
         self.optiontexts.update()
-
+    #mendekalarasikan untuk menggambar
     def draw(self, window):
         window.fill((0,0,12))
         self.draw_background(window, self.bg_layer1_img, self.bg_layer1_rect, self.bg_layer1_x)
@@ -226,7 +253,7 @@ class TitleScene(Scene):
         self.menu_area.set_colorkey('brown')
         self.optiontexts.draw(self.menu_area)
         pygame.draw.rect(self.menu_area, 'white', (3,self.selector_y,249,40), self.selector_width) # selector
-
+    #mendekalarasikan untuk menggambar pada background
     def draw_background(self, surf, img, img_rect, pos):
         surf_w = surf.get_width()
         rel_x = pos % img_rect.width
@@ -234,15 +261,17 @@ class TitleScene(Scene):
 
         if rel_x < surf_w:
             surf.blit(img, (rel_x, 0))
-
+#membuat class ShopScene
 class ShopScene(Scene):
+    #mendekalarasikan variabel self
     def __init__(self):
-        #print(game_data.highscore, game_data.coins)
+        #memuat game dengan highscore
         self.coins = 1000
         self.init_x = 16
         self.init_y = 16
         self.x_offset = 64 + self.init_x 
         self.y_offset = 64 + self.init_y
+        #memuat pelihanran file
         self.pet_files = [
             'pet_cat.png', 
             'pet_chiki.png', 
@@ -252,6 +281,7 @@ class ShopScene(Scene):
             'pet_skull.png', 
             'pet_stealbucks.png'
         ]
+        #memuat topi file
         self.hat_files = [
             'hat_dimadome.png',
             'hat_howl.png',
@@ -280,17 +310,19 @@ class ShopScene(Scene):
         self.pets_area = pygame.Surface((WIN_SZ[0] / 1.33, 96))
         self.hats_area = pygame.Surface((WIN_SZ[0] / 1.33, 96))
         self.cur_shop = self.pets_area
-
+         #memuat backround pada layer 1 dari file
         self.bg_layer1_img = load_png("bgnaw.png", IMG_DIR, 1)     
         self.bg_layer1_rect = self.bg_layer1_img.get_rect()
         
 
         self.bg_layer1_x = 0
+        self.bg_layer2_x = 0
+        self.bg_layer3_x = 0
 
         # Sprite groups
         self.texts = pygame.sprite.Group()
 
-        # Texts yang ditampilkan pada shop
+        # Texts
         self.text_shoplabel = Text(WIN_SZ[0] / 5, 64, "Shop", GAME_FONT, 48, 'white')
         self.text_coins = Text(WIN_SZ[0] / 1.4, 75, f"C{game_data.coins}", GAME_FONT, 32, 'yellow')
         self.text_isbought = Text(WIN_SZ[0] / 1.5, 400, "Bought", GAME_FONT, 32, 'white', False)
@@ -304,26 +336,38 @@ class ShopScene(Scene):
         self.texts.add(self.text_exitbutton)
         self.texts.add(self.text_entbutton)
 
+    #mendekalarasikan variabel (self,events)
     def handle_events(self, events):
+        # YandereDev-esque code here. Beware!
         for event in events:
             if event.type == pygame.KEYDOWN:
-                #jika cur.shop sama dengan pets area maka
+
                 if self.cur_shop == self.pets_area:
-                    #dijalankan if dengan key D dan cur_pet kurang dari pet_files dikurangi 1
+                    #jika acara kunci saat  mengklik tombol tutup di sudut jendela
                     if event.key == pygame.K_d and self.cur_pet < len(self.pet_files) - 1:
                         self.selector_x += 64 + self.init_x
                         self.cur_pet += 1
                         select_sfx.play()
+                        #jika acara kunci saat  mengklik tombol tutup di sudut jendela
                     if event.key == pygame.K_a and self.cur_pet > 0:
                         self.selector_x -= 64 + self.init_x
                         self.cur_pet -= 1
                         select_sfx.play()
-                #elif cur.shop sama dengan hats_area
                 elif self.cur_shop == self.hats_area:
+                    #jika acara kunci saat  mengklik tombol tutup di sudut jendela
                     if event.key == pygame.K_d and self.cur_hat < len(self.hat_files) - 1:
                         self.selector_x += 64 + self.init_x
                         self.cur_hat += 1
                         select_sfx.play()
+                    #jika acara kunci saat  mengklik tombol tutup di sudut jendela
+                    if event.key == pygame.K_a and self.cur_hat > 0:
+                        self.selector_x -= 64 + self.init_x
+                        self.cur_hat -= 1
+                        select_sfx.play()
+
+                if event.key == pygame.K_RETURN:
+                    if self.cur_shop == self.pets_area:
+              
                     if event.key == pygame.K_a and self.cur_hat > 0:
                         self.selector_x -= 64 + self.init_x
                         self.cur_hat -= 1
