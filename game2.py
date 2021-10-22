@@ -689,7 +689,7 @@ class GameScene(Scene):
                 hit.kill()
                 explosion_sfx.play()
 
-        # Apabila player tidak mati maka
+        # Kondisi Ketika Player Masih Hidup
         if not self.player.is_dead:
             hits = pygame.sprite.spritecollide(self.player, self.powerups, False, pygame.sprite.collide_rect_ratio(0.7))
             for hit in hits:
@@ -791,10 +791,12 @@ class GameScene(Scene):
         window.blit(self.stats_area, (WIN_SZ[0] / 1.3, 30)) # Update Stats game
         self.stats_area.fill('#87CEEB') # Memberi warna pada stats area
         self.play_area.fill('black')      # Memberi warna pada play area
-        window.blit(window, next(self.offset))
-
+        window.blit(window, next(self.offset)) # Untuk update window
+        
+        # Untuk menampilkan background
         self.draw_background(self.play_area, self.bg_layer1_img, self.bg_layer1_rect, self.bg_layer1_x, "horizontal")
         
+        # Menampilkan play area dalam sprites
         self.sprites.draw(self.play_area)
         self.player.draw(self.play_area)
         if game_data.equipped_pet != "none":
